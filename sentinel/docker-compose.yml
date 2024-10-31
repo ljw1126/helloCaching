@@ -1,0 +1,119 @@
+services:
+  redis-master:
+    hostname: redis-master
+    container_name: redis-master
+    image: "bitnami/redis"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    networks:
+      - mybridge
+  redis-replicas-1:
+    hostname: redis-replicas-1
+    container_name: redis-replicas-1
+    image: "bitnami/redis"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6380:6379
+    networks:
+      - mybridge
+    depends_on:
+      - redis-master
+  redis-replicas-2:
+    hostname: redis-replicas-2
+    container_name: redis-replicas-2
+    image: "bitnami/redis"
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6381:6379
+    networks:
+      - mybridge
+    depends_on:
+      - redis-master
+
+  sentinel-1:
+    hostname: sentinel-1
+    container_name: sentinel-1
+    image: "bitnami/redis-sentinel:latest"
+    environment:
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 26379:26379
+    networks:
+      - mybridge
+    depends_on:
+      - redis-master
+      - redis-replicas-1
+      - redis-replicas-2
+  sentinel-2:
+    hostname: sentinel-2
+    container_name: sentinel-2
+    image: "bitnami/redis-sentinel:latest"
+    environment:
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 26380:26379
+    networks:
+      - mybridge
+    depends_on:
+      - redis-master
+      - redis-replicas-1
+      - redis-replicas-2
+  sentinel-3:
+    hostname: sentinel-3
+    container_name: sentinel-3
+    image: "bitnami/redis-sentinel:latest"
+    environment:
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_SET=mymaster
+      - REDIS_SENTINEL_QUORUM=2
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 26381:26379
+    networks:
+      - mybridge
+    depends_on:
+      - redis-master
+      - redis-replicas-1
+      - redis-replicas-2
+
+  haproxy:
+    hostname: haproxy
+    container_name: haproxy
+    image: "haproxy:latest"
+    ports:
+      - 8000:8000 # HAProxy port for Redis requests
+      - 8001:8001 # HAProxy additional port for Redis requests
+      - 9000:9000 # HAProxy web console port
+    networks:
+      - mybridge
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - redis-master
+      - redis-replicas-1
+      - redis-replicas-2
+
+networks:
+  mybridge:
+    driver: bridge
