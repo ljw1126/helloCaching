@@ -12,7 +12,6 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,25 +63,25 @@ public class StringsTest {
         }
     }
 
-   @Order(2)
-   @Test
-   void incrBy() {
-       try (Jedis jedis = jedisPool.getResource()) {
-           long before = Long.parseLong(jedis.get("counter"));
-           long counter = jedis.incrBy("counter", 10);
-           assertThat(counter).isGreaterThanOrEqualTo(before + 10);
-       }
-   }
+    @Order(2)
+    @Test
+    void incrBy() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            long before = Long.parseLong(jedis.get("counter"));
+            long counter = jedis.incrBy("counter", 10);
+            assertThat(counter).isGreaterThanOrEqualTo(before + 10);
+        }
+    }
 
-   @Order(3)
-   @Test
-   void decr() {
-       try (Jedis jedis = jedisPool.getResource()) {
-           long before = Long.parseLong(jedis.get("counter"));
-           long counter = jedis.decr("counter");
-           assertThat(counter).isEqualTo(before - 1);
-       }
-   }
+    @Order(3)
+    @Test
+    void decr() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            long before = Long.parseLong(jedis.get("counter"));
+            long counter = jedis.decr("counter");
+            assertThat(counter).isEqualTo(before - 1);
+        }
+    }
 
     @Order(4)
     @Test
@@ -120,7 +119,7 @@ public class StringsTest {
      */
     @AfterAll
     static void afterAll() {
-        if(jedisPool != null && !jedisPool.isClosed()) {
+        if (jedisPool != null && !jedisPool.isClosed()) {
             Jedis jedis = jedisPool.getResource();
             jedis.flushAll();
             jedis.close();
