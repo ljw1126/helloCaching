@@ -2,7 +2,7 @@ services:
   redis-node-1:
     hostname: redis-node-1
     container_name: redis-node-1
-    image: bitnami/redis-cluster:latest
+    image: bitnami/redis-cluster:latest # network 생성시 cluster_* prefix 강제 추가되어 맨밑 networks 설정에 external, name 추가
     environment:
       - REDIS_REPLICATION_MODE=master
       - REDIS_CLUSTER_CREATOR=yes # 이 노드가 클러스터를 생성
@@ -12,7 +12,7 @@ services:
     ports:
       - "6300:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-2:
     hostname: redis-node-2
@@ -25,7 +25,7 @@ services:
     ports:
       - "6301:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-3:
     hostname: redis-node-3
@@ -38,7 +38,7 @@ services:
     ports:
       - "6302:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-4:
     hostname: redis-node-4
@@ -51,7 +51,7 @@ services:
     ports:
       - "6303:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-5:
     hostname: redis-node-5
@@ -64,7 +64,7 @@ services:
     ports:
       - "6304:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-6:
     hostname: redis-node-6
@@ -77,7 +77,7 @@ services:
     ports:
       - "6305:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
 
   redis-node-7:
     hostname: redis-node-7
@@ -90,8 +90,29 @@ services:
     ports:
       - "6306:6379"
     networks:
-      - mybridge
+      - redis-cluster-network
+
+  predixy:
+    hostname: predixy
+    container_name: predixy
+    image: haandol/predixy:latest
+    ports:
+      - "7617:7617"
+    volumes:
+      - ./conf:/etc/predixy/conf
+    networks:
+      - redis-cluster-network
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+      - redis-node-5
+      - redis-node-6
+      - redis-node-7
 
 networks:
-  mybridge:
+  redis-cluster-network:
+    name: mybridge
+    external: true
     driver: bridge
